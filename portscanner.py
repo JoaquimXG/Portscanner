@@ -11,7 +11,7 @@ from random import random
 
 lock = threading.Lock() #for locking threads to print/change shared variables
 found = None #bool for whether any ports are found to be open TO-DO move to local scope?
-closedcount =0 #counting the number of closed ports that are found 
+closedcount =0 #counting the number of closed ports that are found
 
 def connectscan(IP,port):
     print("unused")
@@ -19,7 +19,7 @@ def connectscan(IP,port):
 #     try:
 #         portsocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 #         portsocket.connect((IP,int(port)))
-#         lock.acquire() 
+#         lock.acquire()
 #         print ('[+] %s open' % port)
 #         global found
 #         found = True
@@ -32,10 +32,10 @@ def connectscan(IP,port):
 #     finally:
 #         lock.release()
 #         portsocket.close()
-# 
+#
 # def synscan(IP,port):
 #     print("to be developed")
-    
+
 
 def hostscan(IP,ports):#parses scan choice
     print("unused")
@@ -47,7 +47,7 @@ def hostscan(IP,ports):#parses scan choice
 #             tcon.start()
 #         for thread in threads:
 #             thread.join()
-#     
+#
 #     if (options.synscan==True):
 #         for port in ports:
 #             tsyn = threading.Thread(target=synscan,args=(IP,port))
@@ -72,10 +72,10 @@ if __name__ == '__main__':
     parser.add_argument("-sT", dest="connectscan",action="store_true", help="only attempt a full connect scan")
     parser.add_argument("-sS", dest="synscan",action="store_true",help="only attempt a syn scan")
     (options, args) = parser.parse_args()
-   
-    #parsing variables 
+
+    #parsing variables
     IP = socket.gethostbyname(args[0])
-    print ("[*] Target IP address : %s" % IP)  
+    print ("[*] Target IP address : %s" % IP)
     if options.ports:
         ports = [i for i in options.ports.split(",")]
     else:
@@ -88,15 +88,15 @@ if __name__ == '__main__':
 #     discoverhost(IP)
 
     exit()
-    
+
 
 #launching points
-#     hostscan(IP,ports) 
-    
+#     hostscan(IP,ports)
+
 # #printing results for closed ports
 #     if found == None:
 #         print ("all %d ports closed" %closedcount)
 #     elif found == True:
 #         if (closedcount>0):
 #             print ("%d closed ports not shown" %closedcount)
-        
+
