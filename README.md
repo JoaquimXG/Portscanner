@@ -1,7 +1,5 @@
 # Portscanner in Python 
 
-![Over the Wire](https://overthewire.org/wargames/natas/)
-
 This project is mostly an exercise to improve my own understanding of how portscanners such as nmap operate.  
 
 The end goal is to create a script that can do both host discovery and port scanning using a number of different contemporary methods. 
