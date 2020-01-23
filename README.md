@@ -11,15 +11,15 @@ This will be written entirely in Python3 and usage can be shown using --help.
 
 ### Host Discovery
 
-SYN ping scan
-ACK ping scan
-ICMP echo,timestamp and mask ping scans
-ARP ping scan
+SYN ping scan,
+ACK ping scan,
+ICMP echo,timestamp and mask ping scans,
+ARP ping scan,
 
 ### Port scanning 
 
-Connection scan
-SYN scan
-ACK scan
-UDP scan
-FIN, NULL, XMAS scans
+Connection scan,
+SYN scan,
+ACK scan,
+UDP scan,
+FIN, NULL, XMAS scans,
