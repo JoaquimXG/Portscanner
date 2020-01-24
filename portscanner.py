@@ -1,6 +1,5 @@
 #!/bin/python
 
-from argparse import ArgumentParser
 import socket
 import threading
 import scapy.all as scapy
@@ -8,90 +7,79 @@ import scapy.all as scapy
 #for testing purposes
 import time
 from random import random
+from arguments import args
 
 lock = threading.Lock() #for locking threads to print/change shared variables
-found = None #bool for whether any ports are found to be open TO-DO move to local scope?
 closedcount =0 #counting the number of closed ports that are found
 
-def connectscan(IP,port):
-    print("unused")
-#     socket.setdefaulttimeout(1)
-#     try:
-#         portsocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-#         portsocket.connect((IP,int(port)))
-#         lock.acquire()
-#         print ('[+] %s open' % port)
-#         global found
-#         found = True
-#     except Exception as e:
-#         lock.acquire()
-#         global closedcount
-#         closedcount+=1
-#         if (options.verbose == True):
-#             print('[-] port %s closed : %s' % (port,e))
-#     finally:
-#         lock.release()
-#         portsocket.close()
-#
-# def synscan(IP,port):
-#     print("to be developed")
+def synping(IP,ports,verbosity=0):
+    print("[-] Running SYN/half-open host discovery on port(s) {}".format(ports))
+
+    p = scapy.IP(dst=IP)/scapy.TCP(dport=ports,flags='S')
+    answered, unanswered= scapy.sr(p,timeout=0.2,retry=1,verbose=verbosity)
+    
+    for sent, recieved in answered:
+        tcp_layer=recieved.getlayer('TCP')
+        if tcp_layer.flags.value == 0x12:
+            if verbosity == True:
+                print("[+] Host found on port: ", tcp_layer.sport,"port open")
+            found_host=True
+        elif tcp_layer.flags.value == 0x14:
+            if verbosity == True:
+                print("[+] Host found on port: {} - port closed".format(tcp_layer.sport))
+            found_host=True
+        else:
+            print ("unknown response retry scan")
+        
+        if found_host==True:
+            return True 
+
+    return False 
 
 
-def hostscan(IP,ports):#parses scan choice
-    print("unused")
-#     threads = []
-#     if (options.connectscan==True):
-#         for port in ports:
-#             tcon = threading.Thread(target=connectscan,args=(IP,port))
-#             threads.append(tcon)
-#             tcon.start()
-#         for thread in threads:
-#             thread.join()
-#
-#     if (options.synscan==True):
-#         for port in ports:
-#             tsyn = threading.Thread(target=synscan,args=(IP,port))
-#             tsyn.start()
-#         tsyn.join()
+def discoverhost(IP,ports,verbosity):
+    if (args.synping):
+        return synping(IP,ports,verbosity)
+
+    elif (args.ackping):
+        return ackping(IP,ports,verbosity)
+
+    elif (args.arpping):
+        return arpping(IP,verbosity)
+    
+    else:
+        print("run defaults")
+        synping(IP,443,verbosity)
+        ackping(IP,80,verbosity)
 
 if __name__ == '__main__':
-    parser = ArgumentParser()
-    usage = "usage: %prog [options] target-IP's"
-#     parser=ArgumentParser(usage=usage)
-    #general options
-    parser.add_argument("-p", "--ports",dest="ports",metavar="[ports]", help="comma seperated list of ports for scanning")
-    parser.add_argument("-v", "--verbose",dest="verbose",action="store_true", help="print additional information")
-    #Host Discovery
-    parser.add_argument("-PS","--syn-ping",metavar="[ports]",dest="synping",help="SYN ping probe to resolve host")
-    parser.add_argument("-PA","--ACK-ping",metavar="[ports]",dest="ackping",help="ACK ping probe to resolve host")
-    parser.add_argument("-PR","--arp-ping",metavar="[ports]",dest="arpping",help="ARP ping probe to resolve host")
-#     parser.add_argument("--PE","--icmp-echo",dest="icmpecho",action="store_true",help="ICMP ECHO probe to resolve host")
-#     parser.add_argument("--PP","--icmp-time",dest="icmptime",action="store_true",help="ICMP Time probe to resolve host")
-#     parser.add_argument("--PM","--icmp-mask",dest="icmpmask",action="store_true",help="ICMP Mask probe to resolve host")
-    #scan types
-    parser.add_argument("-sT", dest="connectscan",action="store_true", help="only attempt a full connect scan")
-    parser.add_argument("-sS", dest="synscan",action="store_true",help="only attempt a syn scan")
-    (options, args) = parser.parse_args()
+    found_host = None 
+    open_ports = 0
+    print (args)
 
     #parsing variables
-    IP = socket.gethostbyname(args[0])
+    IP = socket.gethostbyname(args.Host)
     print ("[*] Target IP address : %s" % IP)
-    if options.ports:
-        ports = [i for i in options.ports.split(",")]
+
+    #Parsing ports for host discovery
+    if (args.synping) or (args.ackping):
+        discover_ports = args.synping if args.synping else args.ackping
+        try:
+            discover_ports = map(int,discover_ports.split(','))
+        except:
+            pass
+    else: discover_ports=None
+        
+
+    if discoverhost(IP,discover_ports,args.verbose) == True:
+        print("[+] Host {} is up".format(IP))
     else:
-        ports = [i for i in range(0,1000)]
-
-
-    print (options,args)
-
-
-#     discoverhost(IP)
+        print("[-] Host {} seems to be down".format(IP))
+    
 
     exit()
 
 
-#launching points
-#     hostscan(IP,ports)
 
 # #printing results for closed ports
 #     if found == None:
