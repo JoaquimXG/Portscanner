@@ -4,7 +4,24 @@ import scapy.all as scapy
 # Local Includes
 from arguments import args
 
-def ackping(IP,ports,verbosity=0):
+def arpping(IP,verbosity):
+    print("[-] Running ARP host discovery")
+    hw_addr_dict={}
+    for name in (scapy.get_if_list()):
+        hw_addr_dict[scapy.get_if_hwaddr(name)]=name
+    
+    p = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")/scapy.ARP(pdst="192.168.56.101")
+    iface = hw_addr_dict.get(p.src)
+    ans, unans = scapy.srp(p,timeout=0.1,verbose=verbosity,iface=iface)
+
+    for sent, received in ans:
+        if received:
+            print("[+] Received ARP response")
+            return True
+
+    return False
+
+def ackping(IP,ports,verbosity):
     print("[-] Running ACK host discovery on port(s) {}".format(ports))
     
     p = scapy.IP(dst=IP)/scapy.TCP(dport=ports,flags='A')
@@ -21,7 +38,7 @@ def ackping(IP,ports,verbosity=0):
     return False
 
 
-def synping(IP,ports,verbosity=0):
+def synping(IP,ports,verbosity):
     print("[-] Running SYN/half-open host discovery on port(s) {}".format(ports))
 
     p = scapy.IP(dst=IP)/scapy.TCP(dport=ports,flags='S')
