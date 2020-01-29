@@ -53,27 +53,27 @@ parser.add_argument(
     help="ARP ping probe to resolve host"
 )
 
-#     parser.add_argument(
-#     "--PE",
-#     "--icmp-echo",
-#     dest="icmpecho",
-#     action="store_true",
-#     help="ICMP ECHO probe to resolve host"
-# )
-#     parser.add_argument(
-#     "--PP",
-#     "--icmp-time",
-#     dest="icmptime",
-#     action="store_true",
-#     help="ICMP Time probe to resolve host"
-# )
-#     parser.add_argument(
-#     "--PM",
-#     "--icmp-mask",
-#     dest="icmpmask",
-#     action="store_true",
-#     help="ICMP Mask probe to resolve host"
-# )
+parser.add_argument(
+    "-PE",
+    "--icmp-echo",
+    dest="icmpecho",
+    action="store_true",
+    help="ICMP ECHO probe to resolve host"
+)
+parser.add_argument(
+    "-PP",
+    "--icmp-time",
+    dest="icmptime",
+    action="store_true",
+    help="ICMP Time probe to resolve host"
+)
+parser.add_argument(
+    "-PM",
+    "--icmp-mask",
+    dest="icmpmask",
+    action="store_true",
+    help="ICMP Mask probe to resolve host"
+)
 #scan types
 #     parser.add_argument(
 #     "-sT",

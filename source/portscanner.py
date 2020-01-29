@@ -6,6 +6,7 @@ import scapy.all as scapy
 # Local Includes
 from arguments import args
 from host_discovery import *
+from target_generator import generate_targets
 
 
 #for testing purposes
@@ -18,9 +19,12 @@ if __name__ == '__main__':
     open_ports = 0
     print (args)
 
-    #parsing variables
-    IP = socket.gethostbyname(args.Host)
-    print ("[*] Target IP address : %s" % IP)
+    #parsing targets
+    targets_dict = generate_targets(args.Host)
+#     print(targets_dict)
+    targets_dict["arp"]=["192.168.56.101","192.168.56.100"]
+    targets_dict["not_arp"]=["192.168.56.101","192.168.56.102"]
+    print(targets_dict)
 
     #Parsing ports for host discovery
     if (args.synping) or (args.ackping):
@@ -30,12 +34,17 @@ if __name__ == '__main__':
         except:
             pass
     else: discover_ports=None
-        
+    
 
-    if discoverhost(IP,discover_ports,args.verbose) == True:
-        print("[+] Host {} is up".format(IP))
-    else:
-        print("[-] Host {} seems to be down".format(IP))
+
+    if discoverhost(targets_dict,discover_ports,args.verbose) == True:
+        print("[+] at least found one host")
+
+
+# this only works for an individual host
+#         print("[+] Host {} is up".format(IP))
+#     else:
+#         print("[-] Host {} seems to be down".format(IP))
     
 
     exit()
