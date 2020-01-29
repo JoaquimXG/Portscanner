@@ -4,6 +4,7 @@ import scapy.all as scapy
 # Local Includes
 from arguments import args
 
+
 def icmpping(IP,verbosity,run_defaults=False):
     
     print(IP)
@@ -34,31 +35,31 @@ def icmpping(IP,verbosity,run_defaults=False):
 
     return False
 
-def arpping(IP,verbosity):
+def arpping(targets,verbosity):
+    if targets == []:
+        return False
+    is_up = []
     print("[-] Running ARP host discovery")
-    hw_addr_dict={}
-    for name in (scapy.get_if_list()):
-        hw_addr_dict[scapy.get_if_hwaddr(name)]=name
     
-    p = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")/scapy.ARP(pdst=IP)
-    iface = hw_addr_dict.get(p.src)
+    for interface in targets:
+        p = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
+        p = p/scapy.ARP(pdst=[t.IP for t in interface[1]])
+        iface = interface[0].name 
 
-    ans, unans = scapy.srp(p,timeout=0.1,verbose=verbosity,iface=iface)
-
-    ans.summary()
-    unans.summary()
-    for sent, received in ans:
-        if received:
-            print("[+] Received ARP response")
-            return True
-
-    return False
+        ans, unans = scapy.srp(p,timeout=0.2,verbose=verbosity,iface=iface)
+        for (sent,received) in ans:
+            for i,ip in enumerate(interface[1]):
+                if ip.IP == received.psrc:
+                    print("[+] Received ARP response from {}".format(ip.IP))
+                    is_up.append(interface[1].pop(i))
+                
+    return is_up 
 
 def ackping(IP,ports,verbosity):
     print("[-] Running ACK host discovery on port(s) {}".format(ports))
     
     p = scapy.IP(dst=IP)/scapy.TCP(dport=ports,flags='A')
-    answered, unanswered= scapy.sr(p,timeout=0.2,retry=1,verbose=verbosity)
+    answered, unanswered= scapy.sr(p,timeout=0.5,retry=1,verbose=verbosity)
 
     for sent,received in answered:
         if received.haslayer('TCP'):
@@ -71,12 +72,17 @@ def ackping(IP,ports,verbosity):
     return False
 
 
-def synping(IP,ports,verbosity):
+def synping(targets,ports,verbosity):
+    if targets == []:
+        return False
+
     print("[-] Running SYN/half-open host discovery on port(s) {}".format(ports))
 
-    p = scapy.IP(dst=IP)/scapy.TCP(dport=ports,flags='S')
+    p = scapy.IP(dst=[target.IP for target in targets] )
+    p = p/scapy.TCP(dport=ports,flags='S')
     answered, unanswered= scapy.sr(p,timeout=0.2,retry=1,verbose=verbosity)
-    
+   
+    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
     for sent, received in answered:
         tcp_layer=received.getlayer('TCP')
 
@@ -91,10 +97,8 @@ def synping(IP,ports,verbosity):
     return False 
 
 
-def discoverhost(targets_dict,ports,verbosity):
-    
-    #this is likely far from ideal
-    IP = targets_dict["arp"] + targets_dict["not_arp"]
+def discoverhost(arp_targets,general_targets,ports,verbosity):
+    is_up = []
 
     if (args.synping):
         return synping(IP,ports,verbosity)
@@ -109,7 +113,9 @@ def discoverhost(targets_dict,ports,verbosity):
         return icmpping(IP,verbosity)
  
     else:
-        arpping(targets_dict["arp"],verbosity)
-#         synping(targets_dict["not_arp"],443,verbosity)
-#         ackping(targets_dict["not_arp"],80,verbosity)
-#         icmpping(targets_dict["not_arp"],verbosity,run_defaults=True)
+        is_up.extend(arpping(arp_targets,verbosity))
+#         synping(general_targets,443,verbosity)
+#         ackping(general_targets,80,verbosity)
+#         icmpping(general_targets,verbosity,run_defaults=True)
+
+    return is_up

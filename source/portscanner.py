@@ -1,4 +1,4 @@
-#!/bin/python
+#!/bin/python3
 
 # Modules
 import scapy.all as scapy
@@ -15,16 +15,10 @@ from random import random
 
 
 if __name__ == '__main__':
-    found_host = None 
-    open_ports = 0
-    print (args)
+    is_up = []
 
     #parsing targets
-    targets_dict = generate_targets(args.Host)
-#     print(targets_dict)
-    targets_dict["arp"]=["192.168.56.101","192.168.56.100"]
-    targets_dict["not_arp"]=["192.168.56.101","192.168.56.102"]
-    print(targets_dict)
+    arp_targets,general_targets= generate_targets(args.Host)
 
     #Parsing ports for host discovery
     if (args.synping) or (args.ackping):
@@ -34,27 +28,12 @@ if __name__ == '__main__':
         except:
             pass
     else: discover_ports=None
-    
 
-
-    if discoverhost(targets_dict,discover_ports,args.verbose) == True:
-        print("[+] at least found one host")
-
-
-# this only works for an individual host
-#         print("[+] Host {} is up".format(IP))
-#     else:
-#         print("[-] Host {} seems to be down".format(IP))
-    
+    is_up = discoverhost(arp_targets,general_targets,discover_ports,args.verbose)
+    if is_up ==[]:
+        print("[-] No hosts found")
+    else:
+        for host in is_up:
+            print("[+] {} is up".format(host.IP))
 
     exit()
-
-
-
-# #printing results for closed ports
-#     if found == None:
-#         print ("all %d ports closed" %closedcount)
-#     elif found == True:
-#         if (closedcount>0):
-#             print ("%d closed ports not shown" %closedcount)
-
