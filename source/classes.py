@@ -13,14 +13,14 @@ class interface:
     def __repr__(self):
         return "<Instance of class.interface {}>".format(self.IP)
 
-class target:
-    """used to hold the attributes of each target specified by the user"""
-
-    def __init__(self,IP):
-        self.IP=IP
-        self.is_up=False
-
-    def __str__(self):
-        return "<Instance of class.targets {}>".format(self.IP)
-    def __repr__(self):
-        return "<Instance of class.targets {}>".format(self.IP)
+# class target:
+#     """used to hold the attributes of each target specified by the user"""
+# 
+#     def __init__(self,IP):
+#         self.IP=IP
+#         self.is_up=False
+# 
+#     def __str__(self):
+#         return "<Instance of class.targets {}>".format(self.IP)
+#     def __repr__(self):
+#         return "<Instance of class.targets {}>".format(self.IP)

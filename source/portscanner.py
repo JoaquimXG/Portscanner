@@ -34,6 +34,6 @@ if __name__ == '__main__':
         print("[-] No hosts found")
     else:
         for host in is_up:
-            print("[+] {} is up".format(host.IP))
+            print("[+] {} is up".format(host))
 
     exit()
