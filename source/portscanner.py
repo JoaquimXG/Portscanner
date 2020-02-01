@@ -20,16 +20,18 @@ if __name__ == '__main__':
     #parsing targets
     arp_targets,general_targets= generate_targets(args.Host)
 
+    print(args)
+
     #Parsing ports for host discovery
     if (args.synping) or (args.ackping):
         discover_ports = args.synping if args.synping else args.ackping
         try:
-            discover_ports = map(int,discover_ports.split(','))
+            discover_ports = list(map(int,discover_ports.split(',')))
         except:
             pass
     else: discover_ports=None
 
-    is_up = discoverhost(arp_targets,general_targets,discover_ports,args.verbose)
+    is_up=discoverhost(arp_targets,general_targets,discover_ports,args.verbose)
     if is_up ==[]:
         print("[-] No hosts found")
     else:

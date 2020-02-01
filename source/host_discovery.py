@@ -40,26 +40,32 @@ def icmpping(targets,verbose):
         
     return is_up 
 
-def arpping(targets,verbose):
+def arpping(targets,verbose,store_interface=False):
     if targets == []:
         return None
 
     print("[-] Running ARP host discovery")
 
     is_up = []
-    for interface in targets:
+    for j,interface in enumerate(targets):
+        if store_interface==True:
+            is_up.append((interface[0],[]))
         p = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
         p = p/scapy.ARP(pdst=interface[1])
         iface = interface[0].name 
 
-        ans, unans = scapy.srp(p,timeout=0.2,verbose=verbose,iface=iface)
+
+        ans, unans = scapy.srp(p,timeout=0.7,retry=1,verbose=verbose,iface=iface)
         for (sent,received) in ans:
             for i,target_ip in enumerate(interface[1]):
                 if target_ip == received.psrc:
-                    is_up.append(interface[1].pop(i))
+                    if store_interface == True:
+                        is_up[j][1].append(interface[1].pop(i))
+                    else:
+                        is_up.append(interface[1].pop(i))
                     if verbose == True:
                         print("[+] {} is up".format(target_ip))
-                
+
     return is_up 
 
 def ackping(targets,ports,verbose):
@@ -92,7 +98,7 @@ def synping(targets,ports,verbose):
     p = scapy.IP(dst=targets)
     p = p/scapy.TCP(dport=ports,flags='S')
    
-    answered, unanswered= scapy.sr(p,timeout=1,retry=1,verbose=verbose)
+    answered, unanswered= scapy.sr(p,timeout=5,retry=1,verbose=verbose)
     for sent, received in answered:
         for i,target_ip in enumerate(targets):
             if target_ip == received.src:
@@ -106,20 +112,39 @@ def synping(targets,ports,verbose):
 def discoverhost(arp_targets,general_targets,ports,verbose):
     is_up = []
 
-#     if (args.synping):
-#         return synping(#targets,ports,verbose)
-# 
+    if (args.arpping):
+        if general_targets != []:
+            print("[*] Warning - only local targets can be reached with ARP")
+        res = arpping(arp_targets,verbose)
+        if res: 
+            is_up.extend(res)
+
+    elif (args.synping):
+        res = arpping(arp_targets,verbose,store_interface=True)
+        if res:
+            for i,interface in enumerate(res):
+                if interface[1] != []:
+                    syn_res=synping(interface[1],ports,verbose)
+                    if syn_res:
+                        is_up.extend(syn_res)
+            
+        res = synping(general_targets,ports,verbose)
+        if res:
+            is_up.extend(res)
+        
+        return is_up
+
 #     elif (args.ackping):
+#         for interface in arp_targets:
+#             general_targets +=interface[1]
 #         return ackping(#targets,ports,verbose)
 # 
-#     elif (args.arpping):
-#         return arpping(#targets,verbose)
-# 
 #     elif args.icmptime or args.icmpecho or args.icmpmask:
+#         for interface in arp_targets:
+#             general_targets +=interface[1]
 #         return icmpping(#targets,verbose)
  
-#     else:
-    if True:
+    else:
         res = arpping(arp_targets,verbose)
         if res:
           is_up.extend(res) 
