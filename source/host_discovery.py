@@ -76,7 +76,7 @@ def ackping(targets,ports,verbose):
     print("[-] Running ACK host discovery on port(s) {}".format(ports))
     
     p = scapy.IP(dst=targets)/scapy.TCP(dport=ports,flags='A')
-    answered, unanswered= scapy.sr(p,timeout=0.5,retry=1,verbose=verbose)
+    answered, unanswered= scapy.sr(p,timeout=1,retry=1,verbose=verbose)
 
     for sent,received in answered:
         for i,target_ip in enumerate(targets):
@@ -98,7 +98,7 @@ def synping(targets,ports,verbose):
     p = scapy.IP(dst=targets)
     p = p/scapy.TCP(dport=ports,flags='S')
    
-    answered, unanswered= scapy.sr(p,timeout=5,retry=1,verbose=verbose)
+    answered, unanswered= scapy.sr(p,timeout=1,retry=1,verbose=verbose)
     for sent, received in answered:
         for i,target_ip in enumerate(targets):
             if target_ip == received.src:
@@ -118,6 +118,8 @@ def discoverhost(arp_targets,general_targets,ports,verbose):
         res = arpping(arp_targets,verbose)
         if res: 
             is_up.extend(res)
+        
+        return is_up
 
     elif (args.synping):
         res = arpping(arp_targets,verbose,store_interface=True)
@@ -134,15 +136,35 @@ def discoverhost(arp_targets,general_targets,ports,verbose):
         
         return is_up
 
-#     elif (args.ackping):
-#         for interface in arp_targets:
-#             general_targets +=interface[1]
-#         return ackping(#targets,ports,verbose)
-# 
-#     elif args.icmptime or args.icmpecho or args.icmpmask:
-#         for interface in arp_targets:
-#             general_targets +=interface[1]
-#         return icmpping(#targets,verbose)
+    elif (args.ackping):
+        res = arpping(arp_targets,verbose,store_interface=True)
+        if res:
+            for i,interface in enumerate(res):
+                if interface[1] != []:
+                    ack_res=ackping(interface[1],ports,verbose)
+                    if ack_res:
+                        is_up.extend(ack_res)
+
+        res = ackping(general_targets,ports,verbose)
+        if res:
+            is_up.extend(res)
+
+        return is_up
+
+    elif args.icmptime or args.icmpecho or args.icmpmask:
+        res = arpping(arp_targets,verbose,store_interface=True)
+        if res:
+            for i,interface in enumerate(res):
+                if interface[1] != []:
+                    icmp_res=icmpping(interface[1],ports,verbose)
+                    if icmp_res:
+                        is_up.extend(icmp_res)
+            
+        res = icmpping(general_targets,verbose)
+        if res:
+            is_up.extend(res)
+
+        return is_up
  
     else:
         res = arpping(arp_targets,verbose)
